@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
+import { AnimatePresence, motion, type PanInfo } from "framer-motion";
 import {
   type ButtonHTMLAttributes,
   type CSSProperties,
-  type PointerEvent as ReactPointerEvent,
+  type FormEvent,
   type ReactNode,
   useCallback,
   useEffect,
@@ -15,6 +15,7 @@ import {
 
 type Direction = "left" | "right";
 type Step =
+  | "access"
   | "intro"
   | "runner"
   | "smashIntro"
@@ -37,18 +38,30 @@ type Profile = {
 
 type ButtonVariant = "primary" | "secondary" | "bare";
 
+const ACCESS_ID = "roxane.rvre";
+const ACCESS_PASSWORD = "yayaroro974934";
+const SWIPE_THRESHOLD = 92;
+const SWIPE_VELOCITY_THRESHOLD = 620;
+
 const matchPhotos = {
   roxane: "/images/roxane.jpg",
+  yazid: "/images/yazid.jpg",
+} as const;
+
+const profileImages = {
+  nathan: "/images/nathan.jpg",
+  abdel: "/images/abdel.jpg",
+  younes: "/images/younes.jpg",
   yazid: "/images/yazid.jpg",
 } as const;
 
 const profiles: readonly Profile[] = [
   {
     name: "Nathan",
-    bio: "L'homme poire",
+    bio: "L’homme poire",
     correct: "left",
     initials: "N",
-    image: "/images/nathan.jpg",
+    image: profileImages.nathan,
     gradient: "linear-gradient(135deg, #e7ff6f 0%, #74d36f 45%, #0d9488 100%)",
     accent: "#f97316",
   },
@@ -57,25 +70,25 @@ const profiles: readonly Profile[] = [
     bio: "Le dernier des sapeurs pas congolais",
     correct: "left",
     initials: "A",
-    image: "/images/abdel.jpg",
+    image: profileImages.abdel,
     gradient: "linear-gradient(135deg, #facc15 0%, #fb923c 48%, #0284c7 100%)",
     accent: "#0f766e",
   },
   {
     name: "Younes",
-    bio: "Sah vasy lui, qui le calcule ?",
+    bio: "Sah, vas-y, lui, qui le calcule ?",
     correct: "left",
     initials: "Y",
-    image: "/images/younes.jpg",
+    image: profileImages.younes,
     gradient: "linear-gradient(135deg, #67e8f9 0%, #22c55e 45%, #14532d 100%)",
     accent: "#fbbf24",
   },
   {
     name: "Yazid",
-    bio: "L'homme de ta vie",
+    bio: "L’homme de ta vie",
     correct: "right",
     initials: "YZ",
-    image: "/images/yazid.jpg",
+    image: profileImages.yazid,
     gradient: "linear-gradient(135deg, #00c2b8 0%, #facc15 42%, #ff7a3d 100%)",
     accent: "#0f766e",
   },
@@ -395,7 +408,7 @@ function CoupleFinishAnimation() {
       </div>
       <div className="animate-pulse-soft text-4xl">💛</div>
       <p className="text-center text-sm font-black text-[#0f766e]">
-        Reunis sous le soleil de La Reunion
+        Yazid et Roxane réunis sous le soleil de la Réunion.
       </p>
     </div>
   );
@@ -419,7 +432,7 @@ function RunnerToRoxaneGame({ onDone }: { onDone: () => void }) {
   const [finished, setFinished] = useState(false);
   const [distance, setDistance] = useState(0);
   const [isJumping, setIsJumping] = useState(false);
-  const [message, setMessage] = useState("Premier tap : Yazid prend son elan.");
+  const [message, setMessage] = useState("Premier tap : Yazid prend son élan.");
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
   const [bgOffset, setBgOffset] = useState(0);
   const [runningFrame, setRunningFrame] = useState(false);
@@ -475,7 +488,7 @@ function RunnerToRoxaneGame({ onDone }: { onDone: () => void }) {
     setObstacles([]);
     setBgOffset(0);
     setRunningFrame(false);
-    setMessage("Premier tap : Yazid prend son elan.");
+    setMessage("Premier tap : Yazid prend son élan.");
 
     velocityRef.current = 0;
     runnerYRef.current = 0;
@@ -588,7 +601,7 @@ function RunnerToRoxaneGame({ onDone }: { onDone: () => void }) {
           finishedOnceRef.current = true;
           finishedRef.current = true;
           setFinished(true);
-          setMessage("Yazid a rejoint Roxane, main dans la main.");
+          setMessage("Yazid et Roxane sont réunis sous le soleil de la Réunion.");
         }
 
         spawnCooldownRef.current = Math.max(0, spawnCooldownRef.current - dt);
@@ -633,7 +646,7 @@ function RunnerToRoxaneGame({ onDone }: { onDone: () => void }) {
         if (collision) {
           gameOverRef.current = true;
           setGameOver(true);
-          setMessage("Obstacle touche. Respire, puis recommence.");
+          setMessage("Obstacle touché. Respire, puis recommence.");
         }
 
         obstaclesRef.current = nextObstacles;
@@ -736,7 +749,7 @@ function RunnerToRoxaneGame({ onDone }: { onDone: () => void }) {
             <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/78 p-5 backdrop-blur-sm">
               <div className="space-y-4 text-center">
                 <div className="text-5xl">💥</div>
-                <p className="font-black text-[#0f4f55]">Obstacle touche.</p>
+                <p className="font-black text-[#0f4f55]">Obstacle touché.</p>
                 <Button
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={(event) => {
@@ -795,14 +808,20 @@ function ProfileAvatar({ profile }: { profile: Profile }) {
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,78,91,0.08),rgba(6,78,91,0.2)_62%,rgba(6,78,91,0.58))]" />
 
       <div className="relative flex h-full w-full items-center justify-center p-3">
-        <div className="relative h-full w-full rounded-lg bg-white/78 shadow-[0_18px_35px_rgba(6,78,91,0.22)] ring-1 ring-white/70">
-          <Image
+        <div className="relative h-full w-full overflow-hidden rounded-lg bg-white/78 shadow-[0_18px_35px_rgba(6,78,91,0.22)] ring-1 ring-white/70">
+          <img
+            src={profile.image}
+            alt=""
+            className="absolute inset-0 h-full w-full scale-110 object-cover opacity-25 blur-xl"
+            draggable={false}
+            loading="eager"
+          />
+          <img
             src={profile.image}
             alt={profile.name}
-            fill
-            priority
-            sizes="(max-width: 430px) 92vw, 390px"
-            className="object-contain p-1"
+            className="absolute inset-0 h-full w-full object-contain p-2"
+            draggable={false}
+            loading="eager"
           />
         </div>
       </div>
@@ -821,12 +840,9 @@ function ProfileAvatar({ profile }: { profile: Profile }) {
 function SwipeScreen({ onDone }: { onDone: () => void }) {
   const [index, setIndex] = useState(0);
   const [message, setMessage] = useState("Pass pour les autres. Smash pour Yazid.");
-  const [dragX, setDragX] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+  const [exitDirection, setExitDirection] = useState<Direction | null>(null);
   const [feedback, setFeedback] = useState<"idle" | "wrong" | "right">("idle");
   const current = profiles[index];
-  const pointerStartXRef = useRef<number | null>(null);
-  const pointerIdRef = useRef<number | null>(null);
   const lockedRef = useRef(false);
   const timeoutRef = useRef<number | null>(null);
 
@@ -847,80 +863,54 @@ function SwipeScreen({ onDone }: { onDone: () => void }) {
 
       const correct = direction === current.correct;
       lockedRef.current = true;
-      setIsDragging(false);
       setFeedback(correct ? "right" : "wrong");
-      setDragX(direction === "right" ? 460 : -460);
+      setExitDirection(direction);
 
       if (!correct) {
         setMessage(
           current.name === "Yazid"
-            ? "Erreur historique. Yazid, c'est a droite."
-            : "Non non. Celui-la part a gauche."
+            ? "Erreur historique. Yazid, c’est à droite."
+            : "Non non. Celui-là part à gauche."
         );
 
         clearPendingTimeout();
         timeoutRef.current = window.setTimeout(() => {
-          setDragX(0);
+          setExitDirection(null);
           setFeedback("idle");
           lockedRef.current = false;
-        }, 360);
+        }, 300);
         return;
       }
 
-      setMessage(direction === "right" ? "Excellent choix." : "Bon reflexe.");
+      setMessage(direction === "right" ? "Excellent choix." : "Bon réflexe.");
 
       clearPendingTimeout();
       timeoutRef.current = window.setTimeout(() => {
         if (index + 1 < profiles.length) {
           setIndex((value) => value + 1);
           setMessage("Pass pour les autres. Smash pour Yazid.");
-          setDragX(0);
+          setExitDirection(null);
           setFeedback("idle");
           lockedRef.current = false;
           return;
         }
 
         onDone();
-      }, 420);
+      }, 240);
     },
     [current, index, onDone]
   );
 
-  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (lockedRef.current) return;
 
-    pointerStartXRef.current = event.clientX;
-    pointerIdRef.current = event.pointerId;
-    setIsDragging(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
+    const intent =
+      Math.abs(info.offset.x) > SWIPE_THRESHOLD ||
+      Math.abs(info.velocity.x) > SWIPE_VELOCITY_THRESHOLD;
 
-  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (pointerStartXRef.current === null || pointerIdRef.current !== event.pointerId) return;
-
-    const nextDrag = Math.max(-150, Math.min(150, event.clientX - pointerStartXRef.current));
-    setDragX(nextDrag);
-  };
-
-  const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (pointerStartXRef.current === null || pointerIdRef.current !== event.pointerId) return;
-
-    const finalDrag = event.clientX - pointerStartXRef.current;
-    pointerStartXRef.current = null;
-    pointerIdRef.current = null;
-    setIsDragging(false);
-
-    if (Math.abs(finalDrag) > 82) {
-      resolveSwipe(finalDrag > 0 ? "right" : "left");
-      return;
+    if (intent) {
+      resolveSwipe(info.offset.x > 0 || info.velocity.x > 0 ? "right" : "left");
     }
-
-    setDragX(0);
-  };
-
-  const cardStyle: CSSProperties = {
-    transform: `translateX(${dragX}px) rotate(${dragX * 0.035}deg)`,
-    transition: isDragging ? "none" : "transform 220ms ease, opacity 220ms ease",
   };
 
   return (
@@ -937,40 +927,61 @@ function SwipeScreen({ onDone }: { onDone: () => void }) {
 
       <Progress value={index + 1} total={profiles.length} />
 
-      <div
-        className={cn(
-          "touch-pan-y select-none",
-          feedback === "wrong" && "animate-shake"
-        )}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        style={cardStyle}
-      >
-        <Card className="overflow-hidden">
-          <div className="h-[min(52dvh,410px)] min-h-[340px]">
-            <ProfileAvatar profile={current} />
-          </div>
-          <div className="space-y-1 border-t border-[#0f766e]/10 bg-white/92 p-4">
-            <h3 className="text-3xl font-black text-[#0f4f55]">{current.name}</h3>
-            <p className="text-base font-semibold text-[#14746f]">{current.bio}</p>
-          </div>
-        </Card>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current.name}
+          drag={lockedRef.current ? false : "x"}
+          dragDirectionLock
+          dragElastic={0.16}
+          dragMomentum={false}
+          dragConstraints={{ left: 0, right: 0 }}
+          onDragEnd={handleDragEnd}
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={
+            exitDirection && feedback === "right"
+              ? {
+                  x: exitDirection === "right" ? 480 : -480,
+                  rotate: exitDirection === "right" ? 16 : -16,
+                  opacity: 0,
+                  scale: 0.96,
+                }
+              : exitDirection && feedback === "wrong"
+                ? {
+                    x: [0, exitDirection === "right" ? 16 : -16, exitDirection === "right" ? -10 : 10, 0],
+                    rotate: [0, exitDirection === "right" ? 2 : -2, 0],
+                    opacity: 1,
+                  }
+                : { opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }
+          }
+          exit={{ opacity: 0, y: -10, scale: 0.97 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+          className="touch-pan-y select-none cursor-grab active:cursor-grabbing"
+          style={{ touchAction: "pan-y", WebkitUserSelect: "none", userSelect: "none" }}
+        >
+          <Card className="overflow-hidden">
+            <div className="h-[min(49dvh,390px)] min-h-[300px]">
+              <ProfileAvatar profile={current} />
+            </div>
+            <div className="space-y-1 border-t border-[#0f766e]/10 bg-white/92 p-4">
+              <h3 className="text-3xl font-black text-[#0f4f55]">{current.name}</h3>
+              <p className="text-base font-semibold text-[#14746f]">{current.bio}</p>
+            </div>
+          </Card>
+        </motion.div>
+      </AnimatePresence>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4 px-1">
         <Button
           variant="secondary"
           onClick={() => resolveSwipe("left")}
-          className="h-14 text-2xl"
+          className="h-16 text-3xl"
           aria-label="Refuser"
         >
           ×
         </Button>
         <Button
           onClick={() => resolveSwipe("right")}
-          className="h-14 bg-[#00a6a6] text-white hover:bg-[#0f766e]"
+          className="h-16 bg-[#00a6a6] text-3xl text-white hover:bg-[#0f766e]"
           aria-label="Choisir"
         >
           💛
@@ -986,7 +997,7 @@ function SmashIntroScreen({ onStart }: { onStart: () => void }) {
       <div className="relative min-h-[500px] overflow-hidden bg-[linear-gradient(180deg,#7de3ff_0%,#dcfff6_42%,#fff4a6_78%,#28a55b_100%)] p-5 text-center">
         <TropicalBackground bgOffset={0} />
 
-        <div className="relative z-10 flex min-h-[460px] flex-col justify-center gap-6">
+        <div className="relative z-10 flex min-h-[460px] flex-col items-center justify-center gap-8">
           <div className="space-y-3">
             <p className="text-sm font-black uppercase tracking-[0.16em] text-[#ff8a3d]">
               Phase 2
@@ -995,41 +1006,21 @@ function SmashIntroScreen({ onStart }: { onStart: () => void }) {
               Smash or Pass
             </h2>
             <p className="mx-auto max-w-[270px] text-base font-bold text-[#14746f]">
-              Un casting express avant le verdict.
+              Fais ton choix, le destin s’occupe du reste.
             </p>
           </div>
 
-          <div className="relative mx-auto h-56 w-full max-w-[300px]">
-            {profiles.map((profile, index) => (
-              <div
-                key={`smash-preview-${profile.name}`}
-                className="absolute top-4 h-40 w-28 overflow-hidden rounded-lg border-4 border-white bg-white shadow-[0_14px_30px_rgba(6,78,91,0.2)]"
-                style={{
-                  left: `${index * 48 + 16}px`,
-                  transform: `rotate(${(index - 1.5) * 7}deg) translateY(${index % 2 === 0 ? 4 : -4}px)`,
-                  zIndex: index + 1,
-                }}
-              >
-                <Image
-                  src={profile.image}
-                  alt={profile.name}
-                  fill
-                  sizes="112px"
-                  className="object-contain p-1"
-                />
-              </div>
-            ))}
-
-            <div className="absolute bottom-0 left-4 rounded-lg bg-white/92 px-4 py-2 text-sm font-black text-[#0f4f55] shadow">
+          <div className="grid w-full max-w-[290px] grid-cols-2 gap-4">
+            <div className="rounded-lg bg-white/92 px-5 py-5 text-lg font-black text-[#0f4f55] shadow">
               Pass
             </div>
-            <div className="absolute bottom-0 right-4 rounded-lg bg-[#ff8a3d] px-4 py-2 text-sm font-black text-[#17313a] shadow">
+            <div className="rounded-lg bg-[#ff8a3d] px-5 py-5 text-lg font-black text-[#17313a] shadow">
               Smash
             </div>
           </div>
 
           <Button onClick={onStart} className="h-14 w-full">
-            Lancer Smash or Pass →
+            Commencer →
           </Button>
         </div>
       </div>
@@ -1053,12 +1044,11 @@ function MatchPicture({
       <div className="absolute inset-0 flex items-center justify-center text-5xl font-black text-[#0f4f55]">
         {initials}
       </div>
-      <Image
+      <img
         src={src}
         alt={name}
-        fill
-        sizes="(max-width: 430px) 86vw, 330px"
-        className="object-contain p-1"
+        className="absolute inset-0 h-full w-full object-contain p-1"
+        draggable={false}
       />
       <div className="absolute bottom-3 left-3 rounded-lg bg-white/90 px-3 py-1 text-xs font-black text-[#0f4f55] shadow">
         {name}
@@ -1191,7 +1181,7 @@ function LoveQuestion({ onDone }: { onDone: () => void }) {
           </h2>
           {attempts > 0 ? (
             <p className="text-sm font-semibold text-[#14746f]">
-              Le bouton non esquive vraiment tres bien.
+              Le bouton non esquive vraiment très bien.
             </p>
           ) : null}
         </div>
@@ -1257,6 +1247,83 @@ function RealFinalScreen({ onRestart }: { onRestart: () => void }) {
   );
 }
 
+function AccessScreen({ onSuccess }: { onSuccess: () => void }) {
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(false);
+
+  const submitAccess = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (identifier.trim() === ACCESS_ID && password === ACCESS_PASSWORD) {
+      setError(false);
+      onSuccess();
+      return;
+    }
+
+    setError(true);
+  };
+
+  return (
+    <Card className="screen-pop w-full overflow-hidden">
+      <div className="relative min-h-[560px] overflow-hidden bg-[linear-gradient(180deg,#7de3ff_0%,#dcfff6_42%,#fff4a6_78%,#28a55b_100%)] p-6">
+        <TropicalBackground bgOffset={0} />
+
+        <form
+          onSubmit={submitAccess}
+          className="relative z-10 flex min-h-[510px] flex-col justify-center gap-5 text-center"
+        >
+          <div className="space-y-3">
+            <p className="text-sm font-black uppercase tracking-[0.16em] text-[#ff8a3d]">
+              Accès réservé
+            </p>
+            <h1 className="text-4xl font-black leading-none text-[#0f4f55] drop-shadow-sm">
+              Oté koman i lé Kafrine ?
+            </h1>
+            <p className="mx-auto max-w-[285px] text-sm font-bold text-[#14746f]">
+              Si ou l'aime jouer c ici ca se passe
+            </p>
+          </div>
+
+          <div className="space-y-3 rounded-lg bg-white/86 p-4 text-left shadow-[0_16px_34px_rgba(6,78,91,0.18)]">
+            <label className="block space-y-1 text-sm font-black text-[#0f4f55]">
+              Identifiant
+              <input
+                value={identifier}
+                onChange={(event) => setIdentifier(event.target.value)}
+                className="h-13 w-full rounded-lg border border-[#0f766e]/20 bg-white px-4 text-base font-bold text-[#0f4f55] outline-none focus:border-[#00a6a6] focus:ring-4 focus:ring-[#00a6a6]/15"
+                autoComplete="username"
+                inputMode="email"
+              />
+            </label>
+
+            <label className="block space-y-1 text-sm font-black text-[#0f4f55]">
+              Mot de passe
+              <input
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                type="password"
+                className="h-13 w-full rounded-lg border border-[#0f766e]/20 bg-white px-4 text-base font-bold text-[#0f4f55] outline-none focus:border-[#00a6a6] focus:ring-4 focus:ring-[#00a6a6]/15"
+                autoComplete="current-password"
+              />
+            </label>
+
+            {error ? (
+              <p className="text-center text-sm font-black text-[#d14a1f]">
+                Mauvais code. Le lagon reste fermé.
+              </p>
+            ) : null}
+          </div>
+
+          <Button type="submit" className="h-14 w-full">
+            Entrer →
+          </Button>
+        </form>
+      </div>
+    </Card>
+  );
+}
+
 function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
     <Card className="screen-pop w-full overflow-hidden">
@@ -1268,7 +1335,7 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
             <RoxaneSprite className="scale-125 drop-shadow-lg" />
           </div>
           <div className="rounded-lg bg-white/84 px-4 py-3 shadow">
-            <h2 className="text-3xl font-black text-[#0f4f55]">La Reunion Rush</h2>
+            <h2 className="text-3xl font-black text-[#0f4f55]">La Réunion Rush</h2>
             <p className="text-sm font-bold text-[#14746f]">
               Yazid doit survivre au parcours.
             </p>
@@ -1292,14 +1359,15 @@ function IntroScreen({ onStart }: { onStart: () => void }) {
 
 function StepBadge({ step }: { step: Step }) {
   const stepLabel = useMemo(() => {
-    if (step === "intro") return "Depart";
+    if (step === "access") return "Accès";
+    if (step === "intro") return "Départ";
     if (step === "runner") return "Course";
     if (step === "smashIntro") return "Smash";
     if (step === "swipe") return "Choix";
     if (step === "match") return "Match";
     if (step === "fatalIntro") return "Danger";
     if (step === "love") return "Question";
-    if (step === "realFinal") return "Coeur";
+    if (step === "realFinal") return "Cœur";
     return "Verdict";
   }, [step]);
 
@@ -1312,7 +1380,7 @@ function StepBadge({ step }: { step: Step }) {
 }
 
 export default function Home() {
-  const [step, setStep] = useState<Step>("intro");
+  const [step, setStep] = useState<Step>("access");
 
   return (
     <main
@@ -1329,7 +1397,7 @@ export default function Home() {
             <Button
               variant="bare"
               className="min-h-10 px-3 py-2 text-sm"
-              onClick={() => setStep("intro")}
+              onClick={() => setStep("access")}
             >
               ↻
             </Button>
@@ -1337,6 +1405,7 @@ export default function Home() {
         </header>
 
         <section className="flex flex-1 items-center">
+          {step === "access" ? <AccessScreen onSuccess={() => setStep("intro")} /> : null}
           {step === "intro" ? <IntroScreen onStart={() => setStep("runner")} /> : null}
           {step === "runner" ? <RunnerToRoxaneGame onDone={() => setStep("smashIntro")} /> : null}
           {step === "smashIntro" ? <SmashIntroScreen onStart={() => setStep("swipe")} /> : null}

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "La Reunion Rush",
-  description: "Mini jeu tropical optimise pour iPhone.",
+  title: "La Réunion Rush",
+  description: "Mini jeu tropical optimisé pour iPhone.",
 };
 
 export default function RootLayout({
