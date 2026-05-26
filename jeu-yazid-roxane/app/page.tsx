@@ -1250,7 +1250,7 @@ function ThinkingScreen({ onRestart }: { onRestart: () => void }) {
         <div className="animate-pulse-soft text-7xl">🐢</div>
 
         <h1 className="text-5xl font-black leading-none text-[#0f4f55]">
-          tu me manques un peu
+          tu me manques un peu...
         </h1>
 
         <Button onClick={onRestart} variant="secondary" className="w-full">
