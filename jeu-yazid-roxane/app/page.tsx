@@ -24,7 +24,8 @@ type Step =
   | "fatalIntro"
   | "love"
   | "final"
-  | "realFinal";
+  | "realFinal"
+  | "thinking";
 
 type Profile = {
   name: string;
@@ -1224,7 +1225,7 @@ function FinalScreen({ onContinue }: { onContinue: () => void }) {
   );
 }
 
-function RealFinalScreen({ onRestart }: { onRestart: () => void }) {
+function RealFinalScreen({ onContinue }: { onContinue: () => void }) {
   return (
     <Card className="screen-pop w-full">
       <div className="flex min-h-[430px] flex-col items-center justify-center gap-7 p-6 text-center">
@@ -1232,6 +1233,24 @@ function RealFinalScreen({ onRestart }: { onRestart: () => void }) {
 
         <h1 className="text-5xl font-black leading-none text-[#0f4f55]">
           Non je rigole
+        </h1>
+
+        <Button onClick={onContinue} variant="secondary" className="w-full">
+          Continuer →
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+function ThinkingScreen({ onRestart }: { onRestart: () => void }) {
+  return (
+    <Card className="screen-pop w-full">
+      <div className="flex min-h-[430px] flex-col items-center justify-center gap-7 p-6 text-center">
+        <div className="animate-pulse-soft text-7xl">🐢</div>
+
+        <h1 className="text-5xl font-black leading-none text-[#0f4f55]">
+          tu me manques un peu
         </h1>
 
         <Button onClick={onRestart} variant="secondary" className="w-full">
@@ -1363,6 +1382,7 @@ function StepBadge({ step }: { step: Step }) {
     if (step === "fatalIntro") return "Danger";
     if (step === "love") return "Question";
     if (step === "realFinal") return "Cœur";
+    if (step === "thinking") return "Soleil";
     return "Verdict";
   }, [step]);
 
@@ -1409,7 +1429,8 @@ export default function Home() {
           {step === "fatalIntro" ? <FatalQuestionIntro onStart={() => setStep("love")} /> : null}
           {step === "love" ? <LoveQuestion onDone={() => setStep("final")} /> : null}
           {step === "final" ? <FinalScreen onContinue={() => setStep("realFinal")} /> : null}
-          {step === "realFinal" ? <RealFinalScreen onRestart={() => setStep("intro")} /> : null}
+          {step === "realFinal" ? <RealFinalScreen onContinue={() => setStep("thinking")} /> : null}
+          {step === "thinking" ? <ThinkingScreen onRestart={() => setStep("intro")} /> : null}
         </section>
       </div>
     </main>
