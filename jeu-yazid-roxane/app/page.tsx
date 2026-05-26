@@ -1179,11 +1179,6 @@ function LoveQuestion({ onDone }: { onDone: () => void }) {
           <h2 className="text-3xl font-black leading-tight text-[#0f4f55]">
             Je suis amoureuse de Yazid ?
           </h2>
-          {attempts > 0 ? (
-            <p className="text-sm font-semibold text-[#14746f]">
-              Le bouton non esquive vraiment très bien.
-            </p>
-          ) : null}
         </div>
 
         <div className="relative flex h-44 w-full items-center justify-center gap-3">
